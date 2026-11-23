@@ -1,0 +1,25 @@
+[project]
+name = "yvette-uwimpaye-rl-summative"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Yvette Uwimpaye", email = "y.uwimpaye@alustudent.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "gymnasium>=1.4.0",
+    "matplotlib>=3.11.2",
+    "numpy>=2.4.6",
+    "pandas>=3.1.1",
+    "pygame>=2.6.1",
+    "torch>=2.15.0",
+    "torchrl>=0.15.0",
+]
+
+[project.scripts]
+yvette-uwimpaye-rl-summative = "yvette_uwimpaye_rl_summative:main"
+
+[build-system]
+requires = ["uv_build>=0.13.8,<0.14.0"]
+build-backend = "uv_build"
