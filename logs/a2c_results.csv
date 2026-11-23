@@ -1,0 +1,2 @@
+lr,gamma,batch_episodes,ent_coef,lam,vf_coef,name,train_mean_last100,eval_mean,eval_std
+0.001,0.99,5,0.01,0.95,0.5,run1_baseline,-13.18,-51.51,12.62
