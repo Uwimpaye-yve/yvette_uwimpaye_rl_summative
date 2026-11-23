@@ -110,22 +110,23 @@ def train_pg(algo, name, lr=1e-3, gamma=0.99, batch_episodes=5, ent_coef=0.01,
 
     torch.save(actor.state_dict(), f"models/pg/{algo}_{name}.pt")
     pd.DataFrame(log).to_csv(f"logs/{algo}_{name}.csv", index=False)
-    eval_mean, eval_std = evaluate(lambda o: int(actor(torch.tensor(o)).argmax()))
+    # policy-gradient agents learn a probability per action, so we test them by sampling from it
+    eval_mean, eval_std = evaluate(lambda o: int(Categorical(logits=actor(torch.tensor(o))).sample()))
     train_last100 = pd.DataFrame(log)["reward"].tail(100).mean()
     return train_last100, eval_mean, eval_std
 
 
 DEFAULTS = {
-    "reinforce": dict(lr=1e-3, gamma=0.99, batch_episodes=5, ent_coef=0.01, baseline=True),
-    "a2c": dict(lr=1e-3, gamma=0.99, batch_episodes=5, ent_coef=0.01, lam=0.95, vf_coef=0.5),
-    "ppo": dict(lr=3e-4, gamma=0.99, batch_episodes=10, ent_coef=0.01, lam=0.95, vf_coef=0.5, clip=0.2, epochs=4),
+    "reinforce": dict(lr=3e-3, gamma=0.99, batch_episodes=5, ent_coef=0.01, baseline=True),
+    "a2c": dict(lr=3e-3, gamma=0.99, batch_episodes=1, ent_coef=0.01, lam=0.95, vf_coef=0.5),
+    "ppo": dict(lr=1e-3, gamma=0.99, batch_episodes=5, ent_coef=0.01, lam=0.95, vf_coef=0.5, clip=0.2, epochs=10),
 }
 
 RUNS = {
     "reinforce": [
         dict(name="run1_baseline"),
-        dict(name="run2_lr_low", lr=1e-4),
-        dict(name="run3_lr_high", lr=5e-3),
+        dict(name="run2_lr_low", lr=1e-3),
+        dict(name="run3_lr_high", lr=1e-2),
         dict(name="run4_gamma_090", gamma=0.90),
         dict(name="run5_gamma_095", gamma=0.95),
         dict(name="run6_batch_1", batch_episodes=1),
@@ -136,25 +137,25 @@ RUNS = {
     ],
     "a2c": [
         dict(name="run1_baseline"),
-        dict(name="run2_lr_low", lr=1e-4),
-        dict(name="run3_lr_high", lr=5e-3),
+        dict(name="run2_lr_low", lr=1e-3),
+        dict(name="run3_lr_high", lr=1e-2),
         dict(name="run4_gamma_090", gamma=0.90),
         dict(name="run5_lambda_100", lam=1.0),
         dict(name="run6_lambda_050", lam=0.5),
-        dict(name="run7_batch_1", batch_episodes=1),
+        dict(name="run7_batch_5", batch_episodes=5),
         dict(name="run8_entropy_0", ent_coef=0.0),
         dict(name="run9_entropy_005", ent_coef=0.05),
         dict(name="run10_vf_100", vf_coef=1.0),
     ],
     "ppo": [
         dict(name="run1_baseline"),
-        dict(name="run2_lr_low", lr=1e-4),
-        dict(name="run3_lr_high", lr=1e-3),
+        dict(name="run2_lr_low", lr=3e-4),
+        dict(name="run3_lr_high", lr=3e-3),
         dict(name="run4_gamma_090", gamma=0.90),
         dict(name="run5_clip_010", clip=0.1),
         dict(name="run6_clip_030", clip=0.3),
-        dict(name="run7_epochs_10", epochs=10),
-        dict(name="run8_batch_5", batch_episodes=5),
+        dict(name="run7_epochs_4", epochs=4),
+        dict(name="run8_batch_10", batch_episodes=10),
         dict(name="run9_entropy_005", ent_coef=0.05),
         dict(name="run10_lambda_100", lam=1.0),
     ],
