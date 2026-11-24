@@ -5,9 +5,11 @@ import torch
 from torch.distributions import Categorical
 
 from environment.custom_env import CHWEnv
-from environment.rendering import action_name
+from environment.rendering import Renderer, action_name
 from training.dqn_training import make_net as make_dqn_net
 from training.pg_training import make_net as make_pg_net
+
+torch.manual_seed(0)  # same run every time (useful for the video)
 
 ALGOS = ["dqn", "reinforce", "a2c", "ppo"]
 EPISODES = 3
@@ -15,8 +17,9 @@ EPISODES = 3
 
 def pick_algo():
     """Use the algorithm given on the command line, otherwise the best one overall."""
-    if len(sys.argv) > 1:
-        return sys.argv[1]
+    names = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if names:
+        return names[0]
     scores = {a: pd.read_csv(f"logs/{a}_results.csv")["eval_mean"].max() for a in ALGOS}
     return max(scores, key=scores.get)
 
@@ -32,10 +35,11 @@ else:
     act = lambda o: int(Categorical(logits=net(torch.tensor(o))).sample())
 
 print(f"Running best {algo.upper()} agent for {EPISODES} episodes (unseen starting caseloads)")
-env = CHWEnv(render_mode="human")
+env = CHWEnv()  # the environment itself is unchanged
+renderer = Renderer()  # the window is drawn separately
 for ep in range(EPISODES):
     obs, _ = env.reset(seed=500000 + ep)  # seeds never used in training
-    env.render()
+    renderer.draw(env)
     print(f"\n=== Episode {ep + 1}  starting risk levels (hidden from agent): {env.risk.tolist()} ===")
     done, total = False, 0
     while not done:
@@ -46,6 +50,7 @@ for ep in range(EPISODES):
         done = terminated or truncated
         print(f"Week {env.week:2d} | {action_name(action):36s} | reward {reward:5.1f} | "
               f"total {total:6.1f} | youth in crisis: {info['crisis']}")
+        renderer.draw(env, reward)  # animate this week in the window
     outcome = "caseload out of control (3 youth in crisis)" if terminated else "completed all 20 weeks"
     print(f"Episode {ep + 1} finished: {outcome}, total reward {total:.1f}")
-env.close()
+renderer.close()
